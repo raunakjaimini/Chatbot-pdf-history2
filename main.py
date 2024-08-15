@@ -23,31 +23,43 @@ st.markdown(
     <style>
     body {
         font-family: 'Arial', sans-serif;
-        background-color: #f0f2f6;
+        background-color: #121212;
+        color: #e0e0e0;
     }
     .title {
-        color: #2b2d2f;
+        color: #ffffff;
         text-align: center;
-    }
-    .header {
-        color: #1f77b4;
-        text-align: center;
-    }
-    .text-input {
-        color: #333;
         margin-bottom: 20px;
     }
-    .button {
-        margin-top: 20px;
+    .header {
+        color: #bb86fc;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .text-input, .button {
+        background-color: #333333;
+        color: #e0e0e0;
+        border: 1px solid #444;
+        border-radius: 4px;
+    }
+    .text-input::placeholder {
+        color: #888;
+    }
+    .button:hover {
+        background-color: #444;
     }
     .response {
-        background-color: #ffffff;
+        background-color: #1e1e1e;
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
+        color: #e0e0e0;
     }
     .sidebar .sidebar-content {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
         padding: 20px;
+        border-radius: 8px;
     }
     </style>
     """,
