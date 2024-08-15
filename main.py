@@ -73,13 +73,12 @@ def main():
     if "pdf_docs" not in st.session_state:
         st.session_state.pdf_docs = []
 
-    # Display chat history
-    if st.session_state.chat_history:
-        st.subheader("Conversation History")
-        for chat in st.session_state.chat_history:
-            with st.container():
-                st.markdown(f"**User:** {chat['user']}")
-                st.markdown(f"**Assistant:** {chat['assistant']}")
+     # Display chat history
+    for chat in st.session_state.chat_history:
+        with st.chat_message("user"):
+            st.markdown(chat["user"])
+        with st.chat_message("assistant"):
+            st.markdown(chat["assistant"])
 
     # File uploader
     uploaded_files = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
@@ -95,16 +94,13 @@ def main():
     user_question = st.text_input("Ask a Question from the PDF File")
 
     if st.button("Process and Get Answer"):
-        if st.session_state.pdf_docs:
+        if st.button("Submit & Process"):
             with st.spinner("Processing..."):
-                if st.session_state.is_new_pdf:
-                    # Process only if new files are uploaded
-                    process_user_question(user_question)
-                    st.session_state.is_new_pdf = False
-                else:
-                    # Use previously processed files
-                    process_user_question(user_question)
-                st.success("Processing Done")
+                raw_text = get_pdf_text(pdf_docs)
+                text_chunks = get_text_chunks(raw_text)
+                get_vector_store(text_chunks)
+                st.balloons()
+                st.success("Your file has been processed, you can ask questions now!")
         else:
             st.error("No PDF file available for processing.")
 
