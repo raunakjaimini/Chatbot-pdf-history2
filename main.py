@@ -27,7 +27,7 @@ st.markdown(
         color: #fbfeff;  /* Orange-red */
     }
     .header {
-        color: #36ff33;  /* Green */
+        color: #36ff33;  /* White */
     }
     .text-input {
         color: #36ff33;  /* Dark red */
