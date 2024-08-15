@@ -106,6 +106,7 @@ def main():
     # File uploader
     uploaded_files = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
 
+    # Save uploaded files to session state
     if uploaded_files:
         st.session_state.pdf_docs = uploaded_files
         st.session_state.is_new_pdf = True
@@ -120,7 +121,13 @@ def main():
             with st.spinner("Processing..."):
                 if st.session_state.is_new_pdf:
                     st.session_state.is_new_pdf = False
-                process_user_question(user_question)
+                    # Re-process if new PDF files are uploaded
+                    process_user_question(user_question)
+                elif st.session_state.chat_history:
+                    # Use previously processed files
+                    process_user_question(user_question)
+                else:
+                    st.error("No PDF file available for processing.")
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
