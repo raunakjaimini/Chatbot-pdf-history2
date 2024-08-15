@@ -48,36 +48,14 @@ def get_conversational_chain():
 
 def process_user_question(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
-    # Check if PDFs are uploaded and processed
-    if "pdf_docs" in st.session_state and st.session_state.pdf_docs:
-        raw_text = get_pdf_text(st.session_state.pdf_docs)
-    else:
-        st.error("No PDF files uploaded.")
-        return
-
-    text_chunks = get_text_chunks(raw_text)
-    get_vector_store(text_chunks)
-
-    # Load the FAISS index with the deserialization allowance
     new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     
-    # Perform similarity search
     docs = new_db.similarity_search(user_question)
-
-    # Get the conversational chain
-    chain = get_conversational_chain()
     
-    # Generate the response
-    response = chain(
-        {"input_documents": docs, "question": user_question},
-        return_only_outputs=True
-    )
-
+    chain = get_conversational_chain()
+    response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
+    
     # Save the question and response to session state
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-        
     st.session_state.chat_history.append({"user": user_question, "assistant": response["output_text"]})
     
     # Display the response
