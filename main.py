@@ -1,4 +1,3 @@
-import time
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -11,14 +10,14 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
-# Set the page configuration at the top
+# Set the page configuration
 st.set_page_config(page_title="SkyChat 3.0.0", page_icon="👽", layout="wide")
 
 # Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Custom CSS for a clean, stylish look
+# Custom CSS for a clean look
 st.markdown("""
     <style>
         body {
@@ -31,14 +30,14 @@ st.markdown("""
             font-weight: bold;
             color: #007BFF;
             text-align: center;
-            margin-top: 20px;
+            margin: 20px 0;
         }
         .header {
             font-size: 24px;
             font-weight: 500;
             color: #333;
             text-align: center;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
         .text-input, .success, .error {
             font-size: 16px;
@@ -146,17 +145,25 @@ def main():
     user_question = st.text_input("Ask a Question from the PDF Files", key="user_question")
 
     if st.button("Process and Get Answer", key="process_button"):
-        if pdf_docs:
-            with st.spinner("Processing..."):
-                user_input(user_question)
-                st.success("Processing Done")
+        if 'pdf_docs' in st.session_state:
+            pdf_docs = st.session_state['pdf_docs']
+            if pdf_docs:
+                with st.spinner("Processing..."):
+                    user_input(user_question)
+                    st.success("Processing Done")
+            else:
+                st.error("No PDF file available for processing.")
         else:
-            st.error("No PDF file available for processing.")
+            st.error("No PDF file uploaded.")
 
     # Sidebar for PDF upload
     with st.sidebar:
         st.markdown('<h3 class="menu-title">Menu:</h3>', unsafe_allow_html=True)
         pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True)
+        
+        # Store uploaded files in session state
+        if pdf_docs:
+            st.session_state['pdf_docs'] = pdf_docs
         
         if st.button("Submit & Process"):
             if pdf_docs:
