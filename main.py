@@ -11,7 +11,7 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 # Set the page configuration
-st.set_page_config(page_title="SkyChat 3.0.0", page_icon="👽", layout="wide")
+st.set_page_config(page_title="Chatbot", page_icon="", layout="wide")
 
 # Load environment variables
 load_dotenv()
@@ -109,8 +109,8 @@ def user_input(user_question):
 
 # Main function to run the Streamlit app
 def main():
-    st.markdown("<h1 class='title'>👽 SkyChat 3.0.0</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 class='header'>Chat with PDF - Gemini LLM App</h2>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title'>Chat-Mate...I can read any pdf file and maintain history</h1>", unsafe_allow_html=True)
+
     
     # Initialize chat history in session state if not present
     if "chat_history" not in st.session_state:
