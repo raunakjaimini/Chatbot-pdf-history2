@@ -98,8 +98,8 @@ def main():
                 st.markdown(f"**User:** {chat['user']}")
                 st.markdown(f"**Assistant:** {chat['assistant']}")
 
-    # Upload PDF files
-    pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True)
+    # File uploader in the main area
+    pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
 
     # Text input for user question
     user_question = st.text_input("Ask a Question from the PDF File")
@@ -111,26 +111,6 @@ def main():
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
-
-    # Sidebar for PDF upload
-    with st.sidebar:
-        st.markdown('### Upload PDF Files')
-        pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True)
-        
-        # Store uploaded files in session state
-        if pdf_docs:
-            st.session_state['pdf_docs'] = pdf_docs
-        
-        if st.button("Submit & Process"):
-            if pdf_docs:
-                with st.spinner("Processing..."):
-                    raw_text = get_pdf_text(pdf_docs)
-                    text_chunks = get_text_chunks(raw_text)
-                    get_vector_store(text_chunks)
-                    st.balloons()
-                    st.success("Your file has been processed, you can ask questions now!")
-            else:
-                st.error("Please upload PDF files before processing.")
 
 if __name__ == "__main__":
     main()
