@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,56 +11,33 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
-# Set the page configuration
+# Set the page configuration at the top
 st.set_page_config(page_title="Chatbot", page_icon="", layout="wide")
 
-# Load environment variables
+# Environment variables ko load karte hain .env file se
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# CSS for custom font colors and layout
+# CSS for custom font colors
 st.markdown(
     """
     <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background-color: #121212;
-        color: #e0e0e0;
-    }
+    
     .title {
-        color: #ffffff;
-        text-align: center;
-        margin-bottom: 20px;
+        color: #fbfeff;  /* Orange-red */
     }
     .header {
-        color: #bb86fc;
-        text-align: center;
-        margin-bottom: 20px;
+        color: #36ff33;  /* Green */
     }
-    .text-input, .button {
-        background-color: #333333;
-        color: #e0e0e0;
-        border: 1px solid #444;
-        border-radius: 4px;
+    .text-input {
+        color: #36ff33;  /* Dark red */
+        
     }
-    .text-input::placeholder {
-        color: #888;
+    .success {
+        color: #28B463;  /* Green */
     }
-    .button:hover {
-        background-color: #444;
-    }
-    .response {
-        background-color: #1e1e1e;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.3);
-        color: #e0e0e0;
-    }
-    .sidebar .sidebar-content {
-        background-color: #1e1e1e;
-        color: #e0e0e0;
-        padding: 20px;
-        border-radius: 8px;
+    .menu-title {
+        color: #36ff33;  /* Blue */
     }
     </style>
     """,
@@ -91,7 +69,7 @@ def get_vector_store(text_chunks):
 def get_conversational_chain():
     prompt_template = """
     Answer the question as detailed as possible from the provided context. If the answer is not in
-    the provided context, just say, "Answer is not available in the context."; don't provide the wrong answer.\n\n
+    the provided context, just say, "Answer is not available in the context"; don't provide the wrong answer.\n\n
     Context:\n {context}\n
     Question:\n {question}\n
     Answer:
@@ -117,12 +95,12 @@ def user_input(user_question):
     st.session_state.chat_history.append({"user": user_question, "assistant": response["output_text"]})
     
     # Display the response
-    st.markdown(f"<div class='response'><strong>Reply:</strong> {response['output_text']}</div>", unsafe_allow_html=True)
+    st.write("Reply: ", response["output_text"])
 
-# Main function to run the Streamlit app
+# Main function jo Streamlit app ko run karta hai
 def main():
-    st.markdown("<h1 class='title'>Chat-Mate...I can read any pdf file and maintain history</h1>", unsafe_allow_html=True)
-
+    st.markdown("<h1 class='title'>Chat-Mate..pdf with history</h1>", unsafe_allow_html=True)
+    # st.markdown("<h2 class='header'>Chat with PDF - Gemini LLM App</h2>", unsafe_allow_html=True)
     
     # Initialize chat history in session state if not present
     if "chat_history" not in st.session_state:
@@ -136,33 +114,22 @@ def main():
             st.markdown(chat["assistant"])
 
     # Input field for user's message
-    user_question = st.text_input("Ask a Question from the PDF Files", key="user_question", placeholder="Type your question here...")
+    user_question = st.chat_input("Ask a Question from the PDF Files")
 
-    if st.button("Submit", key="submit_button"):
-        if 'pdf_docs' in st.session_state:
-            with st.spinner("Processing..."):
-                user_input(user_question)
-                st.success("Processing Done")
-        else:
-            st.error("No PDF file uploaded. Please upload a file in the sidebar.")
+    if user_question:
+        user_input(user_question)
 
     with st.sidebar:
-        st.markdown("<h3 class='header'>Upload Your PDF Files</h3>", unsafe_allow_html=True)
-        pdf_docs = st.file_uploader("Upload PDF Files", accept_multiple_files=True, key="pdf_uploader")
+        st.markdown("<h3 class='menu-title'>Menu:</h3>", unsafe_allow_html=True)
+        pdf_docs = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
         
-        if pdf_docs:
-            st.session_state['pdf_docs'] = pdf_docs  # Save uploaded files to session state
-        
-        if st.button("Process and Get Answer"):
-            if 'pdf_docs' in st.session_state and st.session_state['pdf_docs']:
-                with st.spinner("Processing..."):
-                    raw_text = get_pdf_text(st.session_state['pdf_docs'])
-                    text_chunks = get_text_chunks(raw_text)
-                    get_vector_store(text_chunks)
-                    st.success("Your file has been processed. You can now ask questions.")
-            else:
-                st.error("Please upload your PDF files first.")
+        if st.button("Submit & Process"):
+            with st.spinner("Processing..."):
+                raw_text = get_pdf_text(pdf_docs)
+                text_chunks = get_text_chunks(raw_text)
+                get_vector_store(text_chunks)
+                st.balloons()
+                st.success("Your file has been processed, you can ask questions now!")
 
 if __name__ == "__main__":
     main()
-
