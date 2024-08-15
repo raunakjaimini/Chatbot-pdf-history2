@@ -49,12 +49,12 @@ def get_conversational_chain():
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def user_input(user_question, pdf_docs=None):
+def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
     # Use uploaded PDF or fallback to hard-coded PDF
-    if pdf_docs:
-        raw_text = get_pdf_text(pdf_docs)
+    if "pdf_docs" in st.session_state and st.session_state.pdf_docs:
+        raw_text = get_pdf_text(st.session_state.pdf_docs)
     else:
         raw_text = get_pdf_text([PDF_PATH])  # Wrap in a list for compatibility
 
@@ -89,6 +89,10 @@ def main():
     # Initialize chat history in session state if not present
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    
+    # Initialize PDF documents in session state if not present
+    if "pdf_docs" not in st.session_state:
+        st.session_state.pdf_docs = []
 
     # Display chat history
     if st.session_state.chat_history:
@@ -98,16 +102,20 @@ def main():
                 st.markdown(f"**User:** {chat['user']}")
                 st.markdown(f"**Assistant:** {chat['assistant']}")
 
-    # File uploader in the main area
+    # File uploader
     pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
+
+    # Update session state with uploaded files
+    if pdf_docs:
+        st.session_state.pdf_docs = pdf_docs
 
     # Text input for user question
     user_question = st.text_input("Ask a Question from the PDF File")
 
     if st.button("Process and Get Answer"):
-        if pdf_docs or os.path.isfile(PDF_PATH):
+        if st.session_state.pdf_docs or os.path.isfile(PDF_PATH):
             with st.spinner("Processing..."):
-                user_input(user_question, pdf_docs if pdf_docs else None)
+                user_input(user_question)
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
