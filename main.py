@@ -49,14 +49,15 @@ def get_conversational_chain():
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def user_input(user_question):
+def process_user_question(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    # Use uploaded PDF or fallback to hard-coded PDF
+    # Use uploaded PDFs from session state
     if "pdf_docs" in st.session_state and st.session_state.pdf_docs:
         raw_text = get_pdf_text(st.session_state.pdf_docs)
     else:
-        raw_text = get_pdf_text([PDF_PATH])  # Wrap in a list for compatibility
+        # Fallback to hard-coded PDF
+        raw_text = get_pdf_text([PDF_PATH])
 
     text_chunks = get_text_chunks(raw_text)
     get_vector_store(text_chunks)
@@ -103,11 +104,13 @@ def main():
                 st.markdown(f"**Assistant:** {chat['assistant']}")
 
     # File uploader
-    pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
+    uploaded_files = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
 
-    # Update session state with uploaded files
-    if pdf_docs:
-        st.session_state.pdf_docs = pdf_docs
+    if uploaded_files:
+        st.session_state.pdf_docs = uploaded_files
+        st.session_state.is_new_pdf = True
+    else:
+        st.session_state.is_new_pdf = False
 
     # Text input for user question
     user_question = st.text_input("Ask a Question from the PDF File")
@@ -115,7 +118,9 @@ def main():
     if st.button("Process and Get Answer"):
         if st.session_state.pdf_docs or os.path.isfile(PDF_PATH):
             with st.spinner("Processing..."):
-                user_input(user_question)
+                if st.session_state.is_new_pdf:
+                    st.session_state.is_new_pdf = False
+                process_user_question(user_question)
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
