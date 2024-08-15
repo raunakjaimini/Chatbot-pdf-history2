@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
+# Hard-coded path to your PDF file (for fallback use)
+PDF_PATH = "path/to/your/pdf_file.pdf"
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -46,15 +49,14 @@ def get_conversational_chain():
     chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
     return chain
 
-def process_user_question(user_question):
+def process_user_input(user_question, pdf_docs=None):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
-    # Check if PDFs are uploaded and processed
-    if "pdf_docs" in st.session_state and st.session_state.pdf_docs:
-        raw_text = get_pdf_text(st.session_state.pdf_docs)
+    # Use uploaded PDF or fallback to hard-coded PDF
+    if pdf_docs:
+        raw_text = get_pdf_text(pdf_docs)
     else:
-        st.error("No PDF files uploaded.")
-        return
+        raw_text = get_pdf_text([PDF_PATH])  # Wrap in a list for compatibility
 
     text_chunks = get_text_chunks(raw_text)
     get_vector_store(text_chunks)
@@ -74,24 +76,16 @@ def process_user_question(user_question):
         return_only_outputs=True
     )
 
-    # Save the question and response to session state
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-        
-    st.session_state.chat_history.append({"user": user_question, "assistant": response["output_text"]})
-    
-    # Display the response
-    st.write("Reply: ", response["output_text"])
+    # Return the response text
+    return response["output_text"]
 
 def main():
     st.set_page_config(page_title="Chat PDF", layout="wide")
     st.header("Chat-Mate... I can read any PDF file")
 
-    # Initialize chat history in session state if not present
+    # Initialize session state for chat history and PDF files
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
-
-    # Initialize PDF documents in session state if not present
     if "pdf_docs" not in st.session_state:
         st.session_state.pdf_docs = []
 
@@ -103,15 +97,10 @@ def main():
                 st.markdown(f"**User:** {chat['user']}")
                 st.markdown(f"**Assistant:** {chat['assistant']}")
 
-    # File uploader
-    uploaded_files = st.file_uploader("Upload your PDF Files", accept_multiple_files=True, key="pdf_uploader")
-
-    # Save uploaded files to session state
+    # Upload PDF files
+    uploaded_files = st.file_uploader("Upload your PDF Files", accept_multiple_files=True)
     if uploaded_files:
         st.session_state.pdf_docs = uploaded_files
-        st.session_state.is_new_pdf = True
-    else:
-        st.session_state.is_new_pdf = False
 
     # Text input for user question
     user_question = st.text_input("Ask a Question from the PDF File")
@@ -119,16 +108,13 @@ def main():
     if st.button("Process and Get Answer"):
         if st.session_state.pdf_docs:
             with st.spinner("Processing..."):
-                if st.session_state.is_new_pdf:
-                    # Process only if new files are uploaded
-                    process_user_question(user_question)
-                    st.session_state.is_new_pdf = False
-                else:
-                    # Use previously processed files
-                    process_user_question(user_question)
+                response_text = process_user_input(user_question, st.session_state.pdf_docs)
+                st.session_state.chat_history.append({"user": user_question, "assistant": response_text})
+                st.write("Reply: ", response_text)
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
 
 if __name__ == "__main__":
     main()
+
