@@ -12,6 +12,10 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Hard-coded path to your PDF file (for fallback use)
+PDF_PATH = "path/to/your/pdf_file.pdf"
+
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -42,28 +46,28 @@ def get_conversational_chain():
 
 def process_user_question(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    
+    # Use uploaded PDFs from session state
 
     # Check if PDFs are uploaded and processed
     if "pdf_docs" in st.session_state and st.session_state.pdf_docs:
         raw_text = get_pdf_text(st.session_state.pdf_docs)
     else:
+        # Fallback to hard-coded PDF
+        raw_text = get_pdf_text([PDF_PATH])
         st.error("No PDF files uploaded.")
         return
 
     text_chunks = get_text_chunks(raw_text)
     get_vector_store(text_chunks)
-
     # Load the FAISS index with the deserialization allowance
     new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-
+    
     # Perform similarity search
     docs = new_db.similarity_search(user_question)
-
     # Get the conversational chain
-
     chain = get_conversational_chain()
-    response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
-
+    
     # Generate the response
     response = chain(
         {"input_documents": docs, "question": user_question},
@@ -84,6 +88,8 @@ def main():
     # Initialize chat history in session state if not present
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    
+
     # Initialize PDF documents in session state if not present
     if "pdf_docs" not in st.session_state:
         st.session_state.pdf_docs = []
@@ -104,16 +110,23 @@ def main():
         st.session_state.is_new_pdf = False
     # Text input for user question
     user_question = st.text_input("Ask a Question from the PDF File")
+
     if st.button("Process and Get Answer"):
+        if st.session_state.pdf_docs or os.path.isfile(PDF_PATH):
         if st.session_state.pdf_docs:
             with st.spinner("Processing..."):
                 if st.session_state.is_new_pdf:
+                    st.session_state.is_new_pdf = False
+                    # Re-process if new PDF files are uploaded
                     # Process only if new files are uploaded
                     process_user_question(user_question)
+                elif st.session_state.chat_history:
                     st.session_state.is_new_pdf = False
                 else:
                     # Use previously processed files
                     process_user_question(user_question)
+                else:
+                    st.error("No PDF file available for processing.")
                 st.success("Processing Done")
         else:
             st.error("No PDF file available for processing.")
