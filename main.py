@@ -1,4 +1,3 @@
-import time
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -14,30 +13,62 @@ from dotenv import load_dotenv
 # Set the page configuration at the top
 st.set_page_config(page_title="SkyChat 3.0.0", page_icon="👽", layout="wide")
 
-# Environment variables ko load karte hain .env file se
+# Load environment variables
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# CSS for custom font colors
+# CSS for modern and clean design
 st.markdown(
     """
     <style>
-    
+    body {
+        font-family: 'Arial', sans-serif;
+    }
     .title {
-        color: #fbfeff;  /* Orange-red */
+        color: #1e90ff;  /* Dodger Blue */
+        font-size: 2.5em;
+        text-align: center;
+        margin-top: 20px;
     }
     .header {
-        color: #36ff33;  /* Green */
+        color: #ff6347;  /* Tomato */
+        font-size: 1.5em;
+        text-align: center;
     }
-    .text-input {
-        color: #36ff33;  /* Dark red */
-        
+    .sidebar {
+        background-color: #f0f0f0;
+        padding: 20px;
+        border-radius: 10px;
     }
     .success {
-        color: #28B463;  /* Green */
+        color: #28a745;  /* Success Green */
     }
-    .menu-title {
-        color: #36ff33;  /* Blue */
+    .text-input {
+        color: #333;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    .chat-container {
+        margin: 0 auto;
+        max-width: 800px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #fff;
+    }
+    .chat-message {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .user-message {
+        background-color: #d1e7dd;  /* Light Green */
+        text-align: left;
+    }
+    .assistant-message {
+        background-color: #e2e3e5;  /* Light Gray */
+        text-align: right;
     }
     </style>
     """,
@@ -97,7 +128,7 @@ def user_input(user_question):
     # Display the response
     st.write("Reply: ", response["output_text"])
 
-# Main function jo Streamlit app ko run karta hai
+# Main function for the Streamlit app
 def main():
     st.markdown("<h1 class='title'>👽SkyChat 3.0.0</h1>", unsafe_allow_html=True)
     st.markdown("<h2 class='header'>Chat with PDF - Gemini LLM App</h2>", unsafe_allow_html=True)
@@ -106,30 +137,37 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Display chat history
+    # Display chat history in a clean and styled manner
+    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for chat in st.session_state.chat_history:
-        with st.chat_message("user"):
-            st.markdown(chat["user"])
-        with st.chat_message("assistant"):
-            st.markdown(chat["assistant"])
+        with st.markdown(f"<div class='chat-message user-message'>{chat['user']}</div>", unsafe_allow_html=True):
+            pass
+        with st.markdown(f"<div class='chat-message assistant-message'>{chat['assistant']}</div>", unsafe_allow_html=True):
+            pass
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Input field for user's message
-    user_question = st.chat_input("Ask a Question from the PDF Files")
+    user_question = st.text_input("Ask a Question from the PDF Files", key="user_input", placeholder="Type your question here...", help="Enter your question related to the PDF content.")
 
     if user_question:
         user_input(user_question)
 
     with st.sidebar:
-        st.markdown("<h3 class='menu-title'>Menu:</h3>", unsafe_allow_html=True)
+        st.markdown("<div class='sidebar'>", unsafe_allow_html=True)
+        st.markdown("<h3 class='menu-title'>Upload PDF Files</h3>", unsafe_allow_html=True)
         pdf_docs = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
         
         if st.button("Submit & Process"):
-            with st.spinner("Processing..."):
-                raw_text = get_pdf_text(pdf_docs)
-                text_chunks = get_text_chunks(raw_text)
-                get_vector_store(text_chunks)
-                st.balloons()
-                st.success("Your file has been processed, you can ask questions now!")
+            if pdf_docs:
+                with st.spinner("Processing..."):
+                    raw_text = get_pdf_text(pdf_docs)
+                    text_chunks = get_text_chunks(raw_text)
+                    get_vector_store(text_chunks)
+                    st.balloons()
+                    st.success("Your file has been processed, you can ask questions now!")
+            else:
+                st.error("Please upload at least one PDF file.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
