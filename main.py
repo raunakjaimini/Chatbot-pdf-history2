@@ -99,7 +99,7 @@ def user_input(user_question):
 
 # Main function jo Streamlit app ko run karta hai
 def main():
-    st.markdown("<h1 class='title'>Chat-Mate..pdf with history</h1>", unsafe_allow_html=True)
+    # st.markdown("<h1 class='title'>Chat-Mate..pdf with history</h1>", unsafe_allow_html=True)
     # st.markdown("<h2 class='header'>Chat with PDF - Gemini LLM App</h2>", unsafe_allow_html=True)
     
     # Initialize chat history in session state if not present
